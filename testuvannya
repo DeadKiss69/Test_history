@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<title>Хто ти в історії?</title>
+<style>
+  /* Фонове зображення для всієї сторінки */
+  body { 
+    font-family: Arial, sans-serif; 
+    background: url('https://upload.wikimedia.org/wikipedia/commons/3/37/Ukraine_History.jpg') no-repeat center center fixed; 
+    background-size: cover;
+    padding: 20px; 
+    color: #333;
+  }
+
+  /* Напівпрозорий контейнер для опитування з історичною рамкою */
+  #quiz-container {
+    background-color: rgba(255,255,255,0.9);
+    padding: 30px;
+    border-radius: 20px;
+    max-width: 800px;
+    margin: 0 auto;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    border: 15px solid #8B4513;
+    border-image: url('https://upload.wikimedia.org/wikipedia/commons/thumb/2/23/Ornament_border_ukraine.png/512px-Ornament_border_ukraine.png') 30 round;
+
+    /* Анімація при наведенні */
+    transition: box-shadow 0.5s ease, transform 0.3s ease;
+  }
+
+  #quiz-container:hover {
+    box-shadow: 0 10px 30px rgba(255,215,0,0.7);
+    transform: scale(1.02);
+  }
+
+  h1 { text-align: center; }
+
+  .question { margin-bottom: 20px; padding: 15px; background: #fff; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); transition: all 0.3s; }
+  
+  /* Анімація пропущеного питання */
+  .question.missing { 
+    animation: pulse 1s infinite; 
+    border: 2px solid red;
+    background-color: #ffe5e5;
+  }
+
+  @keyframes pulse {
+    0% { border-color: red; background-color: #ffe5e5; }
+    50% { border-color: darkred; background-color: #ffcccc; }
+    100% { border-color: red; background-color: #ffe5e5; }
+  }
+
+  .answers label { display: block; margin-bottom: 8px; cursor: pointer; }
+  .btn { padding: 10px 20px; font-size: 16px; cursor: pointer; border: none; border-radius: 5px; background: #4CAF50; color: white; display: block; margin: 20px auto; }
+  .message { text-align: center; font-style: italic; color: red; margin-top: 10px; }
+  .result { 
+    margin-top: 20px; 
+    font-size: 20px; 
+    font-weight: bold; 
+    text-align: center; 
+    opacity: 0; 
+    transition: opacity 1s ease-in-out; 
+  }
+  .result.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div id="quiz-container">
+<h1>Хто ти в історії?</h1>
+<div id="quiz"></div>
+<button class="btn" onclick="calculateResult()">Визначити</button>
+<div id="message" class="message"></div>
+<div id="result" class="result"></div>
+</div>
+
+<script>
+// Запитання та відповіді
+const questions = [
+  { q: "1. Яка твоя головна риса?", answers: [ 
+    {text:"Сміливість",value:"Богдан Хмельницький"}, 
+    {text:"Хитрість",value:"Іван Мазепа"}, 
+    {text:"Віра",value:"Володимир Великий"}, 
+    {text:"Мудрість",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "2. Що для тебе найважливіше?", answers: [ 
+    {text:"Незалежність України",value:"Богдан Хмельницький"}, 
+    {text:"Потужні союзники",value:"Іван Мазепа"}, 
+    {text:"Єдина віра",value:"Володимир Великий"}, 
+    {text:"Справедливі закони",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "3. Який символ ти обереш?", answers: [ 
+    {text:"Булава",value:"Богдан Хмельницький"}, 
+    {text:"Печатка",value:"Іван Мазепа"}, 
+    {text:"Хрест",value:"Володимир Великий"}, 
+    {text:"Книга",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "4. Як ти вирішуєш конфлікти?", answers: [ 
+    {text:"Битвою",value:"Богдан Хмельницький"}, 
+    {text:"Переговорами",value:"Іван Мазепа"}, 
+    {text:"Реформами",value:"Володимир Великий"}, 
+    {text:"Справедливим судом",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "5. Що тебе надихає?", answers: [ 
+    {text:"Перемога у бою",value:"Богдан Хмельницький"}, 
+    {text:"Складні політичні комбінації",value:"Іван Мазепа"}, 
+    {text:"Сила віри",value:"Володимир Великий"}, 
+    {text:"Освіта й культура",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "6. Як тебе можна описати одним словом?", answers: [ 
+    {text:"Відважний",value:"Богдан Хмельницький"}, 
+    {text:"Хитрий",value:"Іван Мазепа"}, 
+    {text:"Реформатор",value:"Володимир Великий"}, 
+    {text:"Розумний",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "7. У якій сфері ти був би лідером?", answers: [ 
+    {text:"У війську",value:"Богдан Хмельницький"}, 
+    {text:"У політиці",value:"Іван Мазепа"}, 
+    {text:"У релігії",value:"Володимир Великий"}, 
+    {text:"У праві та освіті",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "8. Твоє головне досягнення?", answers: [ 
+    {text:"Виграні битви",value:"Богдан Хмельницький"}, 
+    {text:"Союз із могутніми державами",value:"Іван Мазепа"}, 
+    {text:"Хрещення народу",value:"Володимир Великий"}, 
+    {text:"«Руська правда» та бібліотеки",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "9. Де ти себе уявляєш?", answers: [ 
+    {text:"У козацькому таборі",value:"Богдан Хмельницький"}, 
+    {text:"На прийомі в європейських монархів",value:"Іван Мазепа"}, 
+    {text:"У храмі",value:"Володимир Великий"}, 
+    {text:"У книжковій майстерні",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "10. Яке твоє кредо?", answers: [ 
+    {text:"«За волю!»",value:"Богдан Хмельницький"}, 
+    {text:"«Сила в союзах»",value:"Іван Мазепа"}, 
+    {text:"«Віра веде»",value:"Володимир Великий"}, 
+    {text:"«Знання – сила»",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "11. Як би ти хотів увійти в історію?", answers: [ 
+    {text:"Як полководець",value:"Богдан Хмельницький"}, 
+    {text:"Як дипломат",value:"Іван Мазепа"}, 
+    {text:"Як хреститель",value:"Володимир Великий"}, 
+    {text:"Як законодавець",value:"Ярослав Мудрий"} 
+  ] },
+  { q: "12. Твоя мета у житті?", answers: [ 
+    {text:"Незалежність України",value:"Богдан Хмельницький"}, 
+    {text:"Міжнародні союзи",value:"Іван Мазепа"}, 
+    {text:"Єдність народу",value:"Володимир Великий"}, 
+    {text:"Освіта і порядок",value:"Ярослав Мудрий"} 
+  ] }
+];
+
+const quizDiv = document.getElementById("quiz");
+const messageDiv = document.getElementById("message");
+const resultDiv = document.getElementById("result");
+
+// Генеруємо питання та відповіді
+questions.forEach((q,index)=>{
+  const div=document.createElement("div");
+  div.className="question";
+  div.innerHTML=`<p>${q.q}</p>`;
+  
+  const answersDiv=document.createElement("div");
+  answersDiv.className="answers";
+  
+  q.answers.forEach(a=>{
+    const label=document.createElement("label");
+    label.innerHTML=`<input type="radio" name="q${index}" value="${a.value}"> ${a.text}`;
+    answersDiv.appendChild(label);
+  });
+  
+  div.appendChild(answersDiv);
+  quizDiv.appendChild(div);
+});
+
+// Підрахунок результату
+function calculateResult(){
+  let allAnswered = true;
+  
+  const questionDivs = document.querySelectorAll(".question");
+  questionDivs.forEach((qDiv,i)=>{
+    const selected = document.querySelector(`input[name="q${i}"]:checked`);
+    if(!selected){
+      qDiv.classList.add("missing");
+      allAnswered = false;
+    } else {
+      qDiv.classList.remove("missing");
+    }
+  });
+  
+  if(!allAnswered){
+    messageDiv.innerHTML = "Ви надали відповіді не на всі питання, будь ласка, перегляньте ще раз";
+    resultDiv.classList.remove("show");
+    return;
+  } else {
+    messageDiv.innerHTML = "";
+  }
+  
+  const counts={"Богдан Хмельницький":0,"Іван Мазепа":0,"Володимир Великий":0,"Ярослав Мудрий":0};
+  const inputs=document.querySelectorAll('input[type="radio"]');
+  inputs.forEach(input=>{
+    if(input.checked){ counts[input.value]++; }
+  });
+  
+  let maxCount=0;
+  let winner="";
+  for(const key in counts){
+    if(counts[key]>maxCount){ maxCount=counts[key]; winner=key; }
+  }
+  
+  resultDiv.innerHTML = `Твоя історична постать: ${winner}`;
+  resultDiv.classList.add("show"); // додаємо клас для плавної появи
+}
+</script>
+
+</body>
+</html>
